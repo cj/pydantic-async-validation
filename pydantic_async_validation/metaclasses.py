@@ -1,6 +1,7 @@
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, dataclass_transform
 
 from pydantic._internal._model_construction import ModelMetaclass
+from pydantic.fields import Field
 
 from pydantic_async_validation.constants import (
     ASYNC_FIELD_VALIDATOR_CONFIG_KEY,
@@ -13,6 +14,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pydantic_async_validation.validators import ValidationInfo
 
 
+@dataclass_transform(kw_only_default=True, field_specifiers=(Field,))
 class AsyncValidationModelMetaclass(ModelMetaclass):
     def __new__(
         mcs,
@@ -60,10 +62,7 @@ class AsyncValidationModelMetaclass(ModelMetaclass):
                 ASYNC_MODEL_VALIDATOR_CONFIG_KEY,
                 None,
             )
-            if (
-                async_model_validator_config is not None
-                and callable(async_model_validator_config.func)
-            ):
+            if async_model_validator_config is not None and callable(async_model_validator_config.func):
                 async_model_validators.append(attr_value)
 
         namespace[ASYNC_FIELD_VALIDATORS_KEY] = async_field_validators

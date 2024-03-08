@@ -1,5 +1,5 @@
 from types import FunctionType
-from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, cast
 
 from pydantic.errors import PydanticUserError
 
@@ -30,14 +30,13 @@ if TYPE_CHECKING:  # pragma: no cover
 class ValidationInfo:
     """Helper / data class to store validator information."""
 
-    __slots__ = ('func', 'extra')
+    __slots__ = ("func", "extra")
 
     def __init__(
         self,
-        func: Callable,
+        func: Callable[..., Any],
         *,
         extra: Optional[dict[str, Any]] = None,
-
     ) -> None:
         self.func = func
         self.extra = extra if extra is not None else {}
@@ -48,7 +47,7 @@ def async_field_validator(
     /,
     *additional_field_names: str,
     **extra: Any,
-) -> Callable[[Callable], Callable]:
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """
     Decorate methods on a model indicating that they should be used to validate data.
 
@@ -61,12 +60,12 @@ def async_field_validator(
             "Validators should be used with fields and keyword arguments, "
             "not bare. "
             "E.g. usage should be `@async_field_validator('<field_name>', ...)`",
-            code='validator-instance-method',
+            code="validator-instance-method",
         )
 
     field_names: Tuple[str, ...] = __field_name, *additional_field_names
 
-    def dec(func: Callable) -> Callable:
+    def dec(func: Callable[..., Any]) -> Any:
         setattr(
             func,
             ASYNC_FIELD_VALIDATOR_CONFIG_KEY,
@@ -80,12 +79,12 @@ def async_field_validator(
         )
         return func
 
-    return dec
+    return cast(Any, dec)
 
 
 def async_model_validator(
-    **extra: Any,
-) -> Callable[[Callable], Callable]:
+    **extra: str,
+) -> Any:
     """
     Decorate methods on a model indicating that they should be used to validate data.
 
@@ -93,7 +92,7 @@ def async_model_validator(
     function to the whole model (root validator).
     """
 
-    def dec(func: Callable) -> Callable:
+    def dec(func: Any) -> Any:
         setattr(
             func,
             ASYNC_MODEL_VALIDATOR_CONFIG_KEY,
@@ -104,4 +103,4 @@ def async_model_validator(
         )
         return func
 
-    return dec
+    return cast(Any, dec)
